@@ -27,7 +27,7 @@ module inputs
   implicit none
   
   ! PHYSICAL PARAMETERS
-  integer, parameter :: systemn = 100000  
+  integer, parameter :: systemn = 10000
   integer, parameter :: dim = 1000
   real, parameter :: DELTA = 50
   real, parameter  :: hop = -1
