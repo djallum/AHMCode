@@ -27,19 +27,19 @@ module inputs
   implicit none
   
   ! PHYSICAL PARAMETERS
-  integer, parameter :: systemn = 10000
-  integer, parameter :: dim = 1000
-  real, parameter :: DELTA = 50
+  integer, parameter :: systemn = 1500000
+  integer, parameter :: dim = 6
+  real, parameter :: DELTA = 20
   real, parameter  :: hop = -1
-  real, parameter :: uSite = 20
+  real, parameter :: uSite = 8
   real, parameter :: ChemPot = uSite/2
   
   ! CODING PARAMETERS
-  real, parameter :: bond_cutoff = 0.2
+  real, parameter :: bond_cutoff = 0.5
   real, parameter :: prune_cutoff = 3
   integer, parameter :: bins = 1000
   integer, parameter :: n_d = systemn*dim
-  integer, parameter :: ClusterMax = dim
+  integer, parameter :: ClusterMax = 6
   integer, parameter :: DOS_MaxCluster = 1!ClusterMax
   real DOS(DOS_MaxCluster,bins)
   real, parameter :: DOS_EMax = 2*uSite+1, DOS_EMin = -DOS_EMax
@@ -58,10 +58,10 @@ module inputs
   !real :: POT_EMax, POT_EMin, Bond_EMax, Bond_EMin, Diff_EMax, Diff_EMin, Avg_EMax, Avg_EMin
   ! RUN THIS PART?
   logical, private, parameter :: ff = .false., tt = .true.
-  logical, parameter :: CalcFracSites = tt ! 
+  logical, parameter :: CalcFracSites = ff ! 
   logical, parameter :: CalcBondStrength = ff
   logical, parameter :: CalcEnergyDiff = ff
-  logical, parameter :: CalcDos = ff
+  logical, parameter :: CalcDos = tt
   logical, parameter :: CalcPot = ff
   logical, parameter :: CalcAvgEofB = ff
 
