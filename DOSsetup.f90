@@ -294,7 +294,7 @@ contains
        else if ( (weakL .eq. 0) .and. (weakR .eq. 0) ) then
           ClusterSize = 0
           ClusterStage = ClusterStage + 1
-          Call PreSetUp(ClusterStage)
+          if ( CalcDOS) Call PreSetUp(ClusterStage)
        else
           Print*, "weakL = weakR, but not 0 in Full_DoS"
           print*, WeakBonds
@@ -302,7 +302,6 @@ contains
           stop
        end if
                 !---------------------------Perform RG is cluster is of smallest size remaining-----------
-       if ( ClusterSize .gt. Pot_ClSize ) RETURN
        
        ! Search for smallest clusters first, labeled as ClusterStage, it increases when clusters of a certain size are eliminated
        if ( ClusterSize .eq. ClusterStage ) then                                 ! If the current cluster is small enough then remove it                      
@@ -311,7 +310,7 @@ contains
           !---------------------------Calculate DoS for cluster and bin the contributions-----------
           If ( CalcDos ) CALL GetDoS( SitePotential, Teff, ClusterSize &               ! Call the Get_DoS routine to calculate the contributions and their weights to DOS
                , weakL, weakR, SitesRemoved, SitesIgnored )
-          If ( CalcPot .and. (Pot_ClSize .eq. ClusterSize) ) &
+          If ( CalcPot .and. (ClusterSize .le. Pot_ClSize) ) &
                CALL GetPotential( SitePotential, weakL, weakR, ClusterSize, SitesRemoved )
 
           
@@ -371,15 +370,15 @@ contains
     
     ClusterSize = dim - SitesRemoved
     if ( ClusterSize .le. ClusterMax ) then
-       CALL PreSetUp(ClusterSize)
+       if ( CalcDos) CALL PreSetUp(ClusterSize)
        weakL = WeakBonds(1); weakR = WeakBonds(1)
        if ( CalcDos ) CALL GetDoS( SitePotential, Teff, ClusterSize &
             , weakL, weakR, SitesRemoved, SitesIgnored )
     
-       If ( CalcPot ) &
+       If ( CalcPot (ClusterSize .eq. Pot_ClSize)) &
                   CALL GetPotential( SitePotential, weakL, weakR, ClusterSize, SitesRemoved )
     end if
-    CALL PreSetUp(1)    
+    if (CalcDos) CALL PreSetUp(1)    
         
     
   end subroutine System_DoS
@@ -462,7 +461,7 @@ contains
     If ( CalcPot ) then
        CALL OpenFile(200, "POT"//trim(str(Pot_ClSize))//"_", "Distribution of Site Potentials in counted clusters", &
             "Site Potentials", "Height of distribution" )
-       write(200,*) "#Maximum cluster Size included: ", ClusterMax
+       write(200,*) "#Maximum cluster Size included: ", Pot_ClSize
        write(200,*) "#Time (s) = ", TIME
        Potential = Potential/Sum(Potential)
        CALL PrintData(200, '(g12.5,g12.5)', POT_EMin, POT_EMax, bins, Potential)

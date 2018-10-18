@@ -269,6 +269,8 @@ contains
                                                          ! removed between them
     integer ClusterSize                                  ! Size of the current cluster
     integer IndexOfNeighbour, ClusterStage, Loop2, i, EndSite              ! Loop integers
+    real :: start, finish
+
     real, allocatable :: sites(:)
     integer :: EndSites
     logical :: SkipDOS
@@ -293,10 +295,14 @@ contains
           ClusterSize = weakR - ( weakL - (dim - SitesRemoved) ) ! Have to calculate the cluster size in this way due to boundary conditions
        else if ( weakL .lt. weakR) then                          ! For all other cases, the weakR label is just the next element in the weakbonds array
           ClusterSize = weakR - weakL
-       else if ( (weakL .eq. 0) .and. (weakR .eq. 0) ) then
+       else if ( (weakL .eq. 0) .and. (weakR .eq. 0) .and. ( (ClusterStage + 1) .le. ClusterMax) ) then
           ClusterSize = 0
           ClusterStage = ClusterStage + 1
-          Call PreSetUp(ClusterStage)
+          !Call PreSetUp(ClusterStage)
+          CYCLE
+       else if ( ( weakL .eq. 0 ) .and. (weakR .eq. 0) ) then
+          ClusterStage = ClusterStage + 1
+          exit
        else
           Print*, "weakL = weakR, but not 0 in Full_DoS"
           print*, WeakBonds
@@ -322,13 +328,9 @@ contains
              Sites = SitePotential((weakL+1):weakR)
           end if
           
-          do i=1,ClusterSize
-             if ( i .eq. ClusterSize) then
-                IndexOfNeighbour = 1
-             else
-                IndexOfNeighbour = i+1
-             end if
-             
+          do i=1,ClusterSize-1
+             IndexOfNeighbour = i+1
+
              if ( abs(Sites(i) - Sites(IndexOfNeighbour)-uSite) .lt. drop_cutoff ) then
                 SkipDOS = .true.
              else if ( abs(Sites(i) - Sites(IndexOfNeighbour)+uSite) .lt. drop_cutoff ) then
@@ -397,8 +399,8 @@ contains
     end do
        
     ClusterSize = dim - SitesRemoved
-    if ( ClusterSize .le. ClusterMax ) then
-       CALL PreSetUp(ClusterSize)
+    if ( (ClusterSize .le. ClusterMax) .and. (ClusterStage .ne. ClusterSize) ) then
+       !CALL PreSetUp(ClusterSize)
        weakL = WeakBonds(1); weakR = WeakBonds(1)
        if ( CalcDos ) CALL GetDoS( SitePotential, Teff, ClusterSize &
             , weakL, weakR, SitesRemoved, SitesIgnored )
@@ -406,7 +408,7 @@ contains
        If ( CalcPot ) &
                   CALL GetPotential( SitePotential, weakL, weakR, ClusterSize, SitesRemoved )
     end if
-    CALL PreSetUp(1)    
+    !CALL PreSetUp(1)    
         
     
   end subroutine System_DoS
@@ -443,7 +445,7 @@ contains
           print*, int(i/real(systemn)*100), "%"
        end if
        
-       
+       print*, "hello"
        !---------------------------Create System------------------------------------
        allocate(SitePotential(dim),Hopping(dim),Bonds(dim))
        call create_AHM( SitePotential, Hopping, Bonds )
@@ -492,6 +494,7 @@ contains
        write(200,*) "#Maximum cluster Size included: ", ClusterMax
        write(200,*) "#Time (s) = ", TIME
        Potential = Potential/Sum(Potential)
+       print*, Potential
        CALL PrintData(200, '(g12.5,g12.5)', POT_EMin, POT_EMax, bins, Potential)
        Close(200)
     end If
