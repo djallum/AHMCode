@@ -123,27 +123,52 @@ contains
   ! Prints data to file with unit number, Unum. Inputs: Unum = unit number for file, Form = format for the data, Bins array: xaxis, Data = Data.
   ! DoSMin + (DoSMax-DoSMin)*iii/real(bins)
   
-  subroutine PrintData( Unum, Form, Min, Max, BinNum, Data, Dropped )
+  subroutine PrintData( Unum, Form, Min, Max, BinNum, Data_sp, Data_dp, Dropped )
     implicit none
     integer, intent(in) :: Unum, BinNum
     character(len=*), intent(in) :: Form
-    real, intent(in), dimension(:) :: Data
+    real, intent(in), dimension(:), optional :: Data_sp
+    real(dp), intent(in), dimension(:), optional :: Data_dp
     real, intent(in) :: Min, Max
     real, optional, intent(in) :: Dropped
-    real :: BinWidth
+    real :: BinWidth, sum1
     integer :: Loop1
 
-    If ( Present(Dropped) ) then
+    if ( Present(Data_dp) ) then
+       BinWidth = (Max - Min)/real(BinNum)               ! Area of each bin (bins have equal width)
+       
+       do Loop1=1,BinNum
+          write(Unum,(Form)) Min + ( Max - Min )*Loop1/real(BinNum) - BinWidth/2, Data_dp(Loop1)/( Sum(Data_dp)*BinWidth )
+       end do
+       sum1 = 0.0
+       do Loop1=1,ClusterMax
+          sum1 = sum1 + Data_sp(Loop1)/( Sum(Data_sp)*BinWidth )
+       end do
+       print*, "For W, U, B:", DELTA, uSite, bond_cutoff
+       print*, "Total fraction of sites in 4-site clusters or less is: ", sum1
+       print*, ""
+
+       
+    else if ( Present(Dropped) ) then
        BinWidth = (Max - Min)/real(BinNum)
        do Loop1=1,BinNum
-          write(Unum,( Form)) Min + ( Max - Min )*Loop1/real(BinNum) - BinWidth/2, Data(Loop1)/( (Sum(Data) + Dropped) * BinWidth )
+          write(Unum,( Form)) Min + ( Max - Min )*Loop1/real(BinNum) - BinWidth/2, &
+               Data_sp(Loop1)/( (Sum(Data_sp) + Dropped) * BinWidth )
        end do
     else
-    
+       
        BinWidth = (Max - Min)/real(BinNum)               ! Area of each bin (bins have equal width)
+       print*, "BinWidth", BinWidth
        do Loop1=1,BinNum
-          write(Unum,( Form)) Min + ( Max - Min )*Loop1/real(BinNum) - BinWidth/2, Data(Loop1)/( BinWidth )
+          write(Unum,(Form)) Min + ( Max - Min )*Loop1/real(BinNum) - BinWidth/2, Data_sp(Loop1)/( Sum(Data_sp)*BinWidth )
        end do
+       sum1 = 0.0
+       do Loop1=1,ClusterMax
+          sum1 = sum1 + Data_sp(Loop1)/( Sum(Data_sp)*BinWidth )
+       end do
+       print*, "For W, U, B:", DELTA, uSite, bond_cutoff
+       print*, "Total fraction of sites in 4-site clusters or less is: ", sum1
+       print*, ""
     end If
     
     Close(Unum)

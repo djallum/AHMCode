@@ -416,18 +416,20 @@ contains
     implicit none
     integer loop1
     real, dimension(dim) :: SitePotential, Hopping, Bonds
-    real, dimension(dim) :: ClusterCount, EDiff
+    real(dp), dimension(dim) :: ClusterCount
+    real, dimension(dim) :: EDiff
     integer, dimension(:), allocatable :: WeakBonds
     real, dimension(bins) :: HistoBonds, HistoEDiff
     
 
-    ClusterCount = 0.0
+    ClusterCount = 0.d0
     SitePotential = 0.0
     Hopping = 0.0
     Bonds = 0.0
     HistoBonds = 0.0
     HistoEDiff = 0.0
     AvgEDist = 0.0
+    times = 0
     
     do loop1=1,systemn
 
@@ -445,33 +447,32 @@ contains
     end do
 
     if ( CalcFracSites ) then
+       print*, ClusterCount, sum(ClusterCount)
        CALL OpenFile( 100, "FracOfSites", "Fraction of Sites vs Cluster Size", &
             "Cluster Sizes", "Fraction of Sites" )
-       ClusterCount = ClusterCount/sum(ClusterCount)
-       CALL PrintData( 100, '(g12.5,g12.5)', 0.5, real(dim)+0.5, dim, ClusterCount )
+       CALL PrintData( 100, '(g12.5,g12.5)', 0.5, real(dim)+0.5, dim, data_dp = ClusterCount )
        Close(100)
     end if
     if ( CalcBondStrength ) then
        CALL OpenFile( 200, "LogBonds", "Log(Distribtion of the log(bonds))", &
             "Right-edge of bins in log(bonds) space", "Distribution of log(bond strengths" )
-       CALL PrintData( 200, '(g12.5,g12.5)', Bond_EMin, Bond_EMax, bins, HistoBonds )
+       CALL PrintData( 200, '(g12.5,g12.5)', Bond_EMin, Bond_EMax, bins, data_sp = HistoBonds )
        Close(200)
     end if
     if ( CalcEnergyDiff ) then
        CALL OpenFile( 300, "EDIFF", "Distribution of energy differences", &
             "\Delta\epsilon", "Height of distribution at \Delta\epsilon" )
-       CALL PrintData( 300, '(g12.5,g12.5)', Diff_EMin, Diff_EMax, bins, HistoEDiff )
+       CALL PrintData( 300, '(g12.5,g12.5)', Diff_EMin, Diff_EMax, bins, data_sp = HistoEDiff )
        Close(300)
     end if
     if ( CalcAvgEofB ) then
        CALL OpenFile( 400, "AvgBondE", "Distribution average bond energy", &
             "Average bond energy", "Distribution of average bond energies at this energy" )
-       AvgEDist = AvgEDist/sum(AvgEDist)
-       CALL PrintData( 400, '(g12.5,g12.5)', Avg_EMin, Avg_EMax, bins, AvgEDist )
+       CALL PrintData( 400, '(g12.5,g12.5)', Avg_EMin, Avg_EMax, bins, data_sp = AvgEDist )
        Close(400)
     end if
 
-
+    print*, "number of edge clusters", times
   end subroutine AnalyzeClusters
   
  
@@ -480,7 +481,7 @@ contains
     implicit none
     integer loop1, loop2!loop integer
     integer, dimension(:), intent(in) :: WeakBonds !An array where each element is 0 or 1. 1 means weak bond, 0 means strong bond
-    real, intent(out) :: ClusterCount(dim) !Counts the number of clusters recorded for each cluster size
+    real(dp), intent(out) :: ClusterCount(dim) !Counts the number of clusters recorded for each cluster size
     integer ClusterSize !contains the size of the current cluster
     integer LbondLabel, RbondLabel !The number that labels the left and right weak bonds that neighbour each cluster
 
@@ -493,6 +494,7 @@ contains
           if (loop1 .eq. SIZE(WeakBonds)) then !If the current cluster is the last cluster, then the second weak bond in this cluster is also the first weak bond in the system
              loop2 = 1
              LbondLabel = LbondLabel - dim !Also redefine the left label as an integer <= 0, the last bond on the chain (bond between last and first sites) is also the 0th bond in the cluster.
+
           else if (loop1 .lt. SIZE(WeakBonds)) then !If the current bond is not the last bond, then the label for the right neighbour bond is one element larger than the left neighbour bond in WeakBonds
              loop2 = loop1 + 1
           else !In case something funky happens. Can't see how but better safe than sorry
@@ -501,6 +503,7 @@ contains
           RbondLabel = WeakBonds(loop2) !Extract the label for the right neighbour bond for the current cluster
           
           ClusterSize = abs(RbondLabel - LbondLabel) !this calculates the size of the cluster. If a cluster is between bond 3 and 4, then the cluster size is 4-3=1
+          if (ClusterSize .eq. 4) times = times + 1
           if (ClusterSize .eq. 0) then
              print*, 'Rbond', RbondLabel
              print*, 'Lbond', LbondLabel
@@ -512,11 +515,12 @@ contains
              stop
           end if
           
-          ClusterCount(ClusterSize) = ClusterCount(ClusterSize) + ClusterSize !Increase the number of clusters of size 'ClusterSize' by an amount equal to 'ClusterSize'
+          ClusterCount(ClusterSize) = ClusterCount(ClusterSize) + ClusterSize !Increase the number of sites in clusters of size 'ClusterSize' by an amount equal to 'ClusterSize'
        end do
        
     else if ( WeakBonds(1) .eq. 0 ) then
-       ClusterCount(dim) = ClusterCount(dim) + dim
+       times = times + 1
+       !ClusterCount(dim) = ClusterCount(dim) + dim
     end if
        
     

@@ -310,7 +310,7 @@ contains
           !---------------------------Calculate DoS for cluster and bin the contributions-----------
           If ( CalcDos ) CALL GetDoS( SitePotential, Teff, ClusterSize &               ! Call the Get_DoS routine to calculate the contributions and their weights to DOS
                , weakL, weakR, SitesRemoved, SitesIgnored )
-          If ( CalcPot .and. (ClusterSize .le. Pot_ClSize) ) &
+          If ( CalcPot .and. (ClusterSize .le. Pot_ClSize+1) ) &
                CALL GetPotential( SitePotential, weakL, weakR, ClusterSize, SitesRemoved )
 
           
@@ -375,7 +375,7 @@ contains
        if ( CalcDos ) CALL GetDoS( SitePotential, Teff, ClusterSize &
             , weakL, weakR, SitesRemoved, SitesIgnored )
     
-       If ( CalcPot (ClusterSize .eq. Pot_ClSize)) &
+       If ( CalcPot .and. (ClusterSize .le. Pot_ClSize)) &
                   CALL GetPotential( SitePotential, weakL, weakR, ClusterSize, SitesRemoved )
     end if
     if (CalcDos) CALL PreSetUp(1)    
@@ -420,7 +420,7 @@ contains
        allocate(SitePotential(dim),Hopping(dim),Bonds(dim))
        call create_AHM( SitePotential, Hopping, Bonds )
        call CalcWeakBonds( Bonds, WeakBonds, SitesRemoved )
-       if ( WeakBonds(1) .eq. 0 ) then
+       if ( (WeakBonds(1) .eq. 0)  ) then
           !print*, "All Bonds Strong"
           deallocate(SitePotential,Hopping,Bonds,WeakBonds)
           CYCLE
