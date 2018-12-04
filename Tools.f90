@@ -136,13 +136,12 @@ contains
 
     if ( Present(Data_dp) ) then
        BinWidth = (Max - Min)/real(BinNum)               ! Area of each bin (bins have equal width)
-       
        do Loop1=1,BinNum
           write(Unum,(Form)) Min + ( Max - Min )*Loop1/real(BinNum) - BinWidth/2, Data_dp(Loop1)/( Sum(Data_dp)*BinWidth )
        end do
        sum1 = 0.0
        do Loop1=1,ClusterMax
-          sum1 = sum1 + Data_sp(Loop1)/( Sum(Data_sp)*BinWidth )
+          sum1 = sum1 + Data_dp(Loop1)/( Sum(Data_dp)*BinWidth )
        end do
        print*, "For W, U, B:", DELTA, uSite, bond_cutoff
        print*, "Total fraction of sites in 4-site clusters or less is: ", sum1

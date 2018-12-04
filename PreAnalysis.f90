@@ -447,7 +447,7 @@ contains
     end do
 
     if ( CalcFracSites ) then
-       print*, ClusterCount, sum(ClusterCount)
+       !print*, ClusterCount, sum(ClusterCount)
        CALL OpenFile( 100, "FracOfSites", "Fraction of Sites vs Cluster Size", &
             "Cluster Sizes", "Fraction of Sites" )
        CALL PrintData( 100, '(g12.5,g12.5)', 0.5, real(dim)+0.5, dim, data_dp = ClusterCount )
